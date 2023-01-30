@@ -20,42 +20,48 @@ let todos = [];
 
 todoForm.addEventListener('submit', async (e) => {
     // on submit,
+    e.preventDefault();
     // create a todo in supabase using for data
+    const formData = new FormData(todoForm);
+    await createTodo(formData.get('todo'));
     // reset the form DOM element
+    todoForm.reset();
     // and display the todos
-    await displayTodos();
-});
-
-window.addEventListener('load', async () => {
-    // fetch the todos and store in state
-    const todosData = await getTodos();
-    todos = todosData;
-    console.log(todos);
-    // call displayTodos
-    await displayTodos();
+    displayTodos();
 });
 
 async function displayTodos() {
     // clear the container (.textContent = '')
     todosEl.textContent = '';
     // fetch the user's todos from supabase
+    const todos = await getTodos();
     // loop through the user's todos
-    todos.forEach((todo) => {
+    todos.forEach((item) => {
         // for each todo, render a new todo DOM element
         // using your render function
-        const todoEl = renderTodo(todo);
+        const todoEl = renderTodo(item);
         // then add an event listener to each todo
         // on click, update the todo in supabase
-        todoEl.addEventListener('click', async (e) => {
-            const id = todo.id;
+
+        todoEl.addEventListener('click', async () => {
+            const id = item.id;
             await completeTodo(id);
+            displayTodos();
         });
+
         // then (shockingly!) call displayTodos() to refresh the list
         // append the rendered todo DOM element to the todosEl
-        displayTodos();
         todosEl.append(todoEl);
     });
 }
+
+window.addEventListener('load', async () => {
+    // fetch the todos and store in state
+    const todosData = await getTodos();
+    todos = todosData;
+    // call displayTodos
+    displayTodos();
+});
 
 logoutButton.addEventListener('click', () => {
     logout();
@@ -63,5 +69,7 @@ logoutButton.addEventListener('click', () => {
 
 deleteButton.addEventListener('click', async () => {
     // delete all todos
+    await deleteAllTodos();
     // then refetch and display the updated list of todos
+    displayTodos();
 });
